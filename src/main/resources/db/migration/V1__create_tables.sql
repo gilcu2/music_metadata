@@ -10,10 +10,10 @@ CREATE TABLE genre (
 
 CREATE TABLE track (
   id  INTEGER PRIMARY KEY AUTO_INCREMENT,
-  artist_id INTEGER,
   title VARCHAR NOT NULL,
+  duration INTEGER,
+  artist_id INTEGER,
   genre_id INTEGER,
-  length INTEGER,
   foreign key (artist_id) references artist(id),
   foreign key (genre_id) references genre(id)
 );
@@ -25,9 +25,9 @@ CREATE TABLE artist_alias (
   foreign key (artist_id) references artist(id)
 );
 
---CREATE TABLE user (
---  id  INTEGER PRIMARY KEY AUTO_INCREMENT,
---  name VARCHAR,
---  next_artist INTEGER
---);
+CREATE TABLE client (
+  id  INTEGER PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR,
+  next_artist INTEGER
+);
 

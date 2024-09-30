@@ -1,4 +1,4 @@
-import Models.{Artist, ArtistAlias, Genre, NotFoundError}
+import Models.{Artist, ArtistAlias, Client, Genre, NotFoundError, Track}
 import cats.effect.IO
 import doobie.implicits._
 import doobie.util.transactor.Transactor
@@ -89,6 +89,70 @@ class Repository(transactor: Transactor[IO]) {
     sql"SELECT * FROM artist_alias WHERE id = $id"
       .query[ArtistAlias].option.transact(transactor).map {
         case Some(artistAlias) => Right(artistAlias)
+        case None => Left(NotFoundError)
+      }
+  }
+
+  def createTrack(track: Track): IO[Track] = {
+     val sql_query =
+      sql"""
+    INSERT INTO track (
+        title,
+        duration,
+        artist_id,
+        genre_id
+    )
+    VALUES (
+      ${track.title},
+      ${track.duration},
+      ${track.artistId},
+      ${track.genreId}
+    );
+    """
+    val sql_query_updated = sql_query
+      .update
+    sql_query_updated
+      .withUniqueGeneratedKeys[Long]("id")
+      .transact(transactor)
+      .map { id => track.copy(id = Some(id))
+      }
+  }
+
+  def getTrack(id: Long): IO[Either[NotFoundError.type, Track]] = {
+    sql"SELECT * FROM track WHERE id = $id"
+      .query[Track].option.transact(transactor).map {
+        case Some(track) => Right(track)
+        case None => Left(NotFoundError)
+      }
+  }
+
+  def createClient(client: Client): IO[Client] = {
+    val name = client.name
+    val next_artist=client.nextArtist
+    val sql_query =
+      sql"""
+    INSERT INTO client (
+          name,
+          next_artist
+    )
+    VALUES (
+      $name,
+      $next_artist
+    );
+    """
+    val sql_query_updated = sql_query
+      .update
+    sql_query_updated
+      .withUniqueGeneratedKeys[Long]("id")
+      .transact(transactor)
+      .map { id => client.copy(id = Some(id))
+      }
+  }
+
+  def getClient(id: Long): IO[Either[NotFoundError.type, Client]] = {
+    sql"SELECT * FROM client WHERE id = $id"
+      .query[Client].option.transact(transactor).map {
+        case Some(client) => Right(client)
         case None => Left(NotFoundError)
       }
   }
