@@ -21,13 +21,13 @@ CREATE TABLE track (
 CREATE TABLE artist_alias (
   id  INTEGER PRIMARY KEY AUTO_INCREMENT,
   artist_id INTEGER,
-  alias VARCHAR,
+  name VARCHAR,
   foreign key (artist_id) references artist(id)
 );
 
-CREATE TABLE user (
-  id  INTEGER PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR,
-  next_artist INTEGER
-);
+--CREATE TABLE user (
+--  id  INTEGER PRIMARY KEY AUTO_INCREMENT,
+--  name VARCHAR,
+--  next_artist INTEGER
+--);
 

@@ -1,4 +1,4 @@
-import Models.{Artist, NotFoundError}
+import Models.{Artist, ArtistAlias, Genre, NotFoundError}
 import cats.effect.IO
 import doobie.implicits._
 import doobie.util.transactor.Transactor
@@ -17,10 +17,8 @@ class Repository(transactor: Transactor[IO]) {
       $name
     );
     """
-    IO.println("Before update")
     val sql_query_updated = sql_query
       .update
-    IO.println("After update")
     sql_query_updated
       .withUniqueGeneratedKeys[Long]("id")
       .transact(transactor)
@@ -31,12 +29,71 @@ class Repository(transactor: Transactor[IO]) {
   def getArtist(id: Long): IO[Either[NotFoundError.type, Artist]] = {
     sql"SELECT * FROM artist WHERE id = $id"
       .query[Artist].option.transact(transactor).map {
-        case Some(review) => Right(review)
+        case Some(artist) => Right(artist)
         case None => Left(NotFoundError)
       }
   }
 
-//  def getAllStats(airport_name_begin: String = ""): Stream[IO, AirportReviewCount] = {
+  def createGenre(genre: Genre): IO[Genre] = {
+    val name = genre.name
+    val sql_query =
+      sql"""
+    INSERT INTO genre (
+          name
+    )
+    VALUES (
+      $name
+    );
+    """
+    val sql_query_updated = sql_query
+      .update
+    sql_query_updated
+      .withUniqueGeneratedKeys[Long]("id")
+      .transact(transactor)
+      .map { id => genre.copy(id = Some(id))
+      }
+  }
+
+  def getGenre(id: Long): IO[Either[NotFoundError.type, Genre]] = {
+    sql"SELECT * FROM genre WHERE id = $id"
+      .query[Genre].option.transact(transactor).map {
+        case Some(genre) => Right(genre)
+        case None => Left(NotFoundError)
+      }
+  }
+
+  def createArtistAlias(alias: ArtistAlias): IO[ArtistAlias] = {
+    val aliasName = alias.name
+    val artistId = alias.artistId
+    val sql_query =
+      sql"""
+    INSERT INTO artist_alias (
+          artist_id,
+          name
+    )
+    VALUES (
+      $artistId,
+      $aliasName
+    );
+    """
+    val sql_query_updated = sql_query
+      .update
+    sql_query_updated
+      .withUniqueGeneratedKeys[Long]("id")
+      .transact(transactor)
+      .map { id => alias.copy(id = Some(id))
+      }
+  }
+
+  def getArtistAlias(id: Long): IO[Either[NotFoundError.type, ArtistAlias]] = {
+    sql"SELECT * FROM artist_alias WHERE id = $id"
+      .query[ArtistAlias].option.transact(transactor).map {
+        case Some(artistAlias) => Right(artistAlias)
+        case None => Left(NotFoundError)
+      }
+  }
+
+  //  def getAllStats(airport_name_begin: String = ""): Stream[IO, AirportReviewCount] = {
 //    sql"""
 //         SELECT airport_name, count(*) as review_count
 //         FROM review
