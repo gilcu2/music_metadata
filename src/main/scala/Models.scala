@@ -14,7 +14,7 @@ object Models {
 
   case class ArtistAlias(id: Option[Long] = None, artistId: Long, name: String)
 
-  case class Client(id: Option[Long] = None, name: String, nextArtist: Long = 0)
+  case class Client(id: Option[Long] = None, name: String, nextArtistId: Long = 0)
 
   case object NotFoundError
 

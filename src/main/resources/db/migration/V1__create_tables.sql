@@ -28,6 +28,6 @@ CREATE TABLE artist_alias (
 CREATE TABLE client (
   id  INTEGER PRIMARY KEY AUTO_INCREMENT,
   name VARCHAR,
-  next_artist INTEGER
+  next_artist_id INTEGER
 );
 

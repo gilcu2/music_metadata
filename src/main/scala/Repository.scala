@@ -157,6 +157,31 @@ class Repository(transactor: Transactor[IO]) {
       }
   }
 
+  def getNextArtist(id: Long): IO[Either[NotFoundError.type, Artist]] = {
+    sql"""SELECT * FROM artist WHERE id > $id order by id limit 1"""
+
+      .query[Artist].option.transact(transactor).map {
+        case Some(artist) => Right(artist)
+        case None => Left(NotFoundError)
+      }
+  }
+
+  def updateClientNextArtist(userId: Long): IO[Either[NotFoundError.type, Artist]] = {
+    sql"""
+         UPDATE client
+         SET next_artist_id = (
+            SELECT artist.id
+            FROM artist
+            WHERE artist.id > client.next_artist_id
+            ORDER BY artist.id
+         )
+         """
+      .query[Artist].option.transact(transactor).map {
+        case Some(artist) => Right(artist)
+        case None => Left(NotFoundError)
+      }
+  }
+
   //  def getAllStats(airport_name_begin: String = ""): Stream[IO, AirportReviewCount] = {
 //    sql"""
 //         SELECT airport_name, count(*) as review_count
