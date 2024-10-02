@@ -1,4 +1,4 @@
-import Models.{Artist, ArtistAlias, Client, Genre, NotFoundError, Track}
+import Models.{Artist, ArtistAlias, Customer, Genre, NotFoundError, Track}
 import cats.effect.IO
 import doobie.implicits._
 import doobie.util.transactor.Transactor
@@ -126,60 +126,57 @@ class Repository(transactor: Transactor[IO]) {
       }
   }
 
-  def createClient(client: Client): IO[Client] = {
-    val name = client.name
-    val next_artist=client.nextArtist
-    val sql_query =
+  def createCustomer(customer: Customer): IO[Customer] = {
+    val name = customer.name
+    val dayArtistId=customer.dayArtistId
+    val sqlQuery =
       sql"""
-    INSERT INTO client (
+    INSERT INTO customer (
           name,
-          next_artist
+          day_artist_id
     )
     VALUES (
       $name,
-      $next_artist
+      $dayArtistId
     );
     """
-    val sql_query_updated = sql_query
+    val sql_query_updated = sqlQuery
       .update
     sql_query_updated
       .withUniqueGeneratedKeys[Long]("id")
       .transact(transactor)
-      .map { id => client.copy(id = Some(id))
+      .map { id => customer.copy(id = Some(id))
       }
   }
 
-  def getClient(id: Long): IO[Either[NotFoundError.type, Client]] = {
-    sql"SELECT * FROM client WHERE id = $id"
-      .query[Client].option.transact(transactor).map {
+  def getCustomer(id: Long): IO[Either[NotFoundError.type, Customer]] = {
+    sql"SELECT * FROM customer WHERE id = $id"
+      .query[Customer].option.transact(transactor).map {
         case Some(client) => Right(client)
         case None => Left(NotFoundError)
       }
   }
 
-  def getNextArtist(id: Long): IO[Either[NotFoundError.type, Artist]] = {
-    sql"""SELECT * FROM artist WHERE id > $id order by id limit 1"""
-
-      .query[Artist].option.transact(transactor).map {
-        case Some(artist) => Right(artist)
-        case None => Left(NotFoundError)
-      }
-  }
-
-  def updateClientNextArtist(userId: Long): IO[Either[NotFoundError.type, Artist]] = {
+  def updateCustomerDayArtist(customerId: Long): IO[Option[Int]] = {
     sql"""
-         UPDATE client
-         SET next_artist_id = (
-            SELECT artist.id
-            FROM artist
-            WHERE artist.id > client.next_artist_id
-            ORDER BY artist.id
+         UPDATE customer
+         SET day_artist_id = (
+              SELECT
+			    artist.id
+		      FROM
+			    artist,
+			    customer
+              WHERE customer.id = $customerId AND
+		      ORDER BY
+			     artist.id - customer.DAY_ARTIST_ID
+		        ASC
+		      LIMIT 1
          )
+         WHERE customer.id = $customerId
          """
-      .query[Artist].option.transact(transactor).map {
-        case Some(artist) => Right(artist)
-        case None => Left(NotFoundError)
-      }
+      .update
+      .withUniqueGeneratedKeys[Option[Int]]("day_artist_id")
+      .transact(transactor)
   }
 
   //  def getAllStats(airport_name_begin: String = ""): Stream[IO, AirportReviewCount] = {

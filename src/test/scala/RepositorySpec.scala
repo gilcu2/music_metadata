@@ -93,22 +93,111 @@ class RepositorySpec extends flatspec.AsyncFlatSpec with AsyncIOSpec
     r.asserting(_.title mustBe title).debug_thread
   }
 
-  "Repository" should "create and retrieve a Client" in {
-    Given("Client")
-    val client = Client(name = "Juan Perez")
+  "Repository" should "create and retrieve a Customer" in {
+    Given("Customer")
+    val customer = Customer(name = "Juan Perez")
 
     When("save to repo and load result")
     val r = transactor.use(t =>
       for {
         _ <- DB.initialize(t).debug_thread
         repository = new Repository(t)
-        clientUpdated <- repository.createClient(client).debug_thread
-        saved <- repository.getClient(clientUpdated.id.get).debug_thread
+        customerUpdated <- repository.createCustomer(customer).debug_thread
+        saved <- repository.getCustomer(customerUpdated.id.get).debug_thread
       } yield saved.toOption.get
     )
 
     Then("Value is the expected")
-    r.asserting(_.name mustBe client.name).debug_thread
+    r.asserting(_.id.isDefined mustBe true)
+    r.asserting(_.name mustBe customer.name).debug_thread
+    r.asserting(_.dayArtistId.isEmpty mustBe true)
   }
+
+  "Repository" should "update customer artist of the day when no artist" in {
+    Given("Client and artists")
+    val client = Customer(name = "Juan Perez")
+
+    When("save to repo and update actor of the day")
+    val r = transactor.use(t =>
+      for {
+        _ <- DB.initialize(t).debug_thread
+        repository = new Repository(t)
+        customerCreated <- repository.createCustomer(client).debug_thread
+        dayArtistId <- repository.updateCustomerDayArtist(customerCreated.id.get).debug_thread
+      } yield dayArtistId
+    )
+
+    Then("Value is the expected")
+    r.asserting(_.isEmpty mustBe true).debug_thread
+  }
+
+  "Repository" should "update customer artist of the day when 1 artist 1 update" in {
+    Given("Client and artists")
+    val client = Customer(name = "Juan Perez")
+    val artist1 = Artist(name = "Donna Summer")
+
+    When("save to repo and update actor of the day")
+    val r = transactor.use(t =>
+      for {
+        _ <- DB.initialize(t).debug_thread
+        repository = new Repository(t)
+        customerCreated <- repository.createCustomer(client).debug_thread
+        artist <- repository.createArtist(artist1).debug_thread
+        dayArtistId <- repository.updateCustomerDayArtist(customerCreated.id.get)
+      } yield (artist, dayArtistId)
+    )
+
+    Then("Value is the expected")
+    r.asserting(pair => pair._2.get mustBe pair._1.id.get).debug_thread
+  }
+
+  "Repository" should "update customer artist of the day when 1 artist 2 updates" in {
+    Given("Client and artists")
+    val client = Customer(name = "Juan Perez")
+    val artist1 = Artist(name = "Donna Summer")
+
+    When("save to repo and update actor of the day")
+    val r = transactor.use(t =>
+      for {
+        _ <- DB.initialize(t).debug_thread
+        repository = new Repository(t)
+        customerCreated <- repository.createCustomer(client).debug_thread
+        artist <- repository.createArtist(artist1).debug_thread
+        customerId = customerCreated.id.get
+        dayArtistId1 <- repository.updateCustomerDayArtist(customerId)
+        dayArtistId2 <- repository.updateCustomerDayArtist(customerId)
+      } yield (artist, dayArtistId1, dayArtistId2)
+    )
+
+    Then("Value is the expected")
+    r.asserting(tuple => tuple._2.get mustBe tuple._1.id.get).debug_thread
+    r.asserting(tuple => tuple._3.get mustBe tuple._1.id.get).debug_thread
+  }
+
+  "Repository" should "update customer artist of the day when 2 artist 2 updates" in {
+    Given("Client and artists")
+    val client = Customer(name = "Juan Perez")
+    val artist1 = Artist(name = "Donna Summer")
+    val artist2 = Artist(name = "Fito Paes")
+
+    When("save to repo and update actor of the day")
+    val r = transactor.use(t =>
+      for {
+        _ <- DB.initialize(t).debug_thread
+        repository = new Repository(t)
+        customerCreated <- repository.createCustomer(client).debug_thread
+        artist1 <- repository.createArtist(artist1).debug_thread
+        artist2 <- repository.createArtist(artist2).debug_thread
+        customerId = customerCreated.id.get
+        dayArtistId1 <- repository.updateCustomerDayArtist(customerId)
+        dayArtistId2 <- repository.updateCustomerDayArtist(customerId)
+      } yield (artist1,artist2, dayArtistId1, dayArtistId2)
+    )
+
+    Then("Value is the expected")
+    r.asserting(tuple => tuple._3.get mustBe tuple._1.id.get).debug_thread
+    r.asserting(tuple => tuple._4.get mustBe tuple._2.id.get).debug_thread
+  }
+
 
 }
