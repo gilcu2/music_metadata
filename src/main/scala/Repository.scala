@@ -128,7 +128,7 @@ class Repository(transactor: Transactor[IO]) {
 
   def createCustomer(customer: Customer): IO[Customer] = {
     val name = customer.name
-    val dayArtistId=customer.dayArtistId
+    val dayArtistId: Option[Long] = customer.dayArtistId
     val sqlQuery =
       sql"""
     INSERT INTO customer (
@@ -152,31 +152,33 @@ class Repository(transactor: Transactor[IO]) {
   def getCustomer(id: Long): IO[Either[NotFoundError.type, Customer]] = {
     sql"SELECT * FROM customer WHERE id = $id"
       .query[Customer].option.transact(transactor).map {
-        case Some(client) => Right(client)
+        case Some(customer) => Right(customer)
         case None => Left(NotFoundError)
       }
   }
 
   def updateCustomerDayArtist(customerId: Long): IO[Option[Int]] = {
     sql"""
-         UPDATE customer
-         SET day_artist_id = (
-              SELECT
-			    artist.id
-		      FROM
-			    artist,
-			    customer
-              WHERE customer.id = $customerId AND
-		      ORDER BY
-			     artist.id - customer.DAY_ARTIST_ID
-		        ASC
-		      LIMIT 1
-         )
-         WHERE customer.id = $customerId
-         """
-      .update
-      .withUniqueGeneratedKeys[Option[Int]]("day_artist_id")
-      .transact(transactor)
+      UPDATE customer
+      SET day_artist_id = (
+        SELECT CASE
+            WHEN (SELECT COUNT(*) FROM ARTIST) = 0 THEN null
+            WHEN (SELECT COUNT(*) FROM ARTIST) = 1 THEN (SELECT artist.id FROM artist)
+            ELSE
+            (SELECT artist.id
+             FROM  artist, customer
+             WHERE customer.id = $customerId
+                  AND  artist.id > COALESCE(customer.DAY_ARTIST_ID,0)
+             ORDER BY artist.id - COALESCE(customer.DAY_ARTIST_ID,0) ASC
+             LIMIT 1
+            )
+       END
+      )
+       WHERE customer.id = $customerId;
+    """
+    .update
+    .withUniqueGeneratedKeys[Option[Int]]("day_artist_id")
+    .transact(transactor)
   }
 
   //  def getAllStats(airport_name_begin: String = ""): Stream[IO, AirportReviewCount] = {
