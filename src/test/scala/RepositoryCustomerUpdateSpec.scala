@@ -14,6 +14,8 @@ class RepositoryCustomerUpdateSpec
   with Matchers {
 
   val transactor: Resource[IO, HikariTransactor[IO]] = DB.transactor()
+  val artistTable="artist"
+  val customerTable="customer"
 
   describe("Repository Customer update") {
 
@@ -65,6 +67,8 @@ class RepositoryCustomerUpdateSpec
         for {
           _ <- DB.initialize(t).debug_thread
           repository = new Repository(t)
+          _ <- repository.deleteAllRows(customerTable)
+          _ <- repository.deleteAllRows(artistTable)
           customerCreated <- repository.createCustomer(client).debug_thread
           artist          <- repository.createArtist(artist1).debug_thread
           customerId = customerCreated.id.get
@@ -84,11 +88,14 @@ class RepositoryCustomerUpdateSpec
       val artist1 = Artist(name = "Donna Summer")
       val artist2 = Artist(name = "Fito Paes")
 
+
       When("save to repo and update actor of the day")
       val r = transactor.use(t =>
         for {
           _ <- DB.initialize(t).debug_thread
           repository = new Repository(t)
+          _ <- repository.deleteAllRows(customerTable)
+          _ <- repository.deleteAllRows(artistTable)
           customerCreated <- repository.createCustomer(client).debug_thread
           artist1         <- repository.createArtist(artist1).debug_thread
           artist2         <- repository.createArtist(artist2).debug_thread
@@ -101,6 +108,36 @@ class RepositoryCustomerUpdateSpec
       Then("Value is the expected")
       r.asserting(tuple => tuple._3.get mustBe tuple._1.id.get).debug_thread
       r.asserting(tuple => tuple._4.get mustBe tuple._2.id.get).debug_thread
+    }
+
+    it("update customer artist of the day when 2 artist 3 updates") {
+      Given("Client and artists")
+      val client  = Customer(name = "Juan Carlos")
+      val artist1 = Artist(name = "Donna Summer")
+      val artist2 = Artist(name = "Fito Paes")
+
+
+      When("save to repo and update actor of the day")
+      val r = transactor.use(t =>
+        for {
+          _ <- DB.initialize(t).debug_thread
+          repository = new Repository(t)
+          _ <- repository.deleteAllRows(customerTable)
+          _ <- repository.deleteAllRows(artistTable)
+          customerCreated <- repository.createCustomer(client).debug_thread
+          artist1         <- repository.createArtist(artist1).debug_thread
+          artist2         <- repository.createArtist(artist2).debug_thread
+          customerId = customerCreated.id.get
+          dayArtistId1 <- repository.updateCustomerDayArtist(customerId)
+          dayArtistId2 <- repository.updateCustomerDayArtist(customerId)
+          dayArtistId3 <- repository.updateCustomerDayArtist(customerId)
+        } yield (artist1, artist2, dayArtistId1, dayArtistId2,dayArtistId3)
+      )
+
+      Then("Value is the expected")
+      r.asserting(tuple => tuple._3.get mustBe tuple._1.id.get).debug_thread
+      r.asserting(tuple => tuple._4.get mustBe tuple._2.id.get).debug_thread
+      r.asserting(tuple => tuple._5.get mustBe tuple._1.id.get).debug_thread
     }
 
   }

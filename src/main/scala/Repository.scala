@@ -1,8 +1,11 @@
 import Models.{Artist, ArtistAlias, Customer, Genre, NotFoundError, Track}
 import cats.effect.IO
 import doobie.implicits._
+import doobie.util.fragment.Fragment
+import doobie.util.query.Query
 import doobie.util.transactor.Transactor
 import fs2.Stream
+import shapeless.HNil
 
 class Repository(transactor: Transactor[IO]) {
 
@@ -32,6 +35,19 @@ class Repository(transactor: Transactor[IO]) {
         case Some(artist) => Right(artist)
         case None => Left(NotFoundError)
       }
+  }
+
+  def updateArtist(artisId:Long,name:String): IO[String] = {
+    val sql =
+      sql"""
+      UPDATE artist
+      SET name = $name
+      WHERE artist.id = $artisId;
+    """
+
+    sql.update
+      .withUniqueGeneratedKeys[String]("name")
+      .transact(transactor)
   }
 
   def createGenre(genre: Genre): IO[Genre] = {
@@ -126,6 +142,13 @@ class Repository(transactor: Transactor[IO]) {
       }
   }
 
+  def getArtistTracks(artistId:Long):Stream[IO,Track]={
+    sql"""
+          select * from track
+          where track.artist_id = $artistId
+    """.query[Track].stream.transact(transactor)
+  }
+
   def createCustomer(customer: Customer): IO[Customer] = {
     val name = customer.name
     val dayArtistId: Option[Long] = customer.dayArtistId
@@ -158,28 +181,43 @@ class Repository(transactor: Transactor[IO]) {
   }
 
   def updateCustomerDayArtist(customerId: Long): IO[Option[Int]] = {
-    sql"""
+    val sql =
+      sql"""
       UPDATE customer
       SET day_artist_id = (
+        WITH row_id AS (
+          SELECT artist.id
+          FROM  artist, customer
+          WHERE customer.id = $customerId
+            AND  artist.id > COALESCE(customer.DAY_ARTIST_ID,0)
+          ORDER BY artist.id - COALESCE(customer.DAY_ARTIST_ID,0) ASC
+          LIMIT 1
+        )
         SELECT CASE
-            WHEN (SELECT COUNT(*) FROM ARTIST) = 0 THEN null
-            WHEN (SELECT COUNT(*) FROM ARTIST) = 1 THEN (SELECT artist.id FROM artist)
-            ELSE
-            (SELECT artist.id
-             FROM  artist, customer
-             WHERE customer.id = $customerId
-                  AND  artist.id > COALESCE(customer.DAY_ARTIST_ID,0)
-             ORDER BY artist.id - COALESCE(customer.DAY_ARTIST_ID,0) ASC
-             LIMIT 1
-            )
-       END
+	      WHEN (SELECT * FROM row_id LIMIT 1) IS NOT NULL
+	        THEN (SELECT * FROM row_id LIMIT 1)
+	      ELSE (SELECT artist.id FROM artist LIMIT 1)
+        END
       )
-       WHERE customer.id = $customerId;
+      WHERE customer.id = $customerId;
     """
-    .update
-    .withUniqueGeneratedKeys[Option[Int]]("day_artist_id")
-    .transact(transactor)
+
+    sql.update
+      .withUniqueGeneratedKeys[Option[Int]]("day_artist_id")
+      .transact(transactor)
   }
+
+  def countRows(tableName: String): IO[Long] = {
+    val sql = sql"select COUNT(*) from " ++ Fragment.const(tableName)
+    sql.query[Long].unique.transact(transactor)
+  }
+
+  def deleteAllRows(tableName: String): IO[Int] = {
+    val sql = sql"delete from " ++ Fragment.const(tableName)
+    sql.update.run.transact(transactor)
+  }
+
+
 
   //  def getAllStats(airport_name_begin: String = ""): Stream[IO, AirportReviewCount] = {
 //    sql"""
