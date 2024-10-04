@@ -37,11 +37,9 @@ object Server {
       ErrorAction.log(
         Router("/api" -> new Routes(repository).routes).orNotFound,
         messageFailureLogAction = (t, msg) =>
-          IO.println(msg) >>
-            IO.println(t),
+          IO.println(msg) >>  IO.println(t),
         serviceErrorLogAction = (t, msg) =>
-          IO.println(msg) >>
-            IO.println(t)
+          IO.println(msg) >>  IO.println(t)
       )
     )
 

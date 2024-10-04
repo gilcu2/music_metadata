@@ -13,7 +13,7 @@ import org.http4s.circe._
 import org.http4s.dsl.io._
 import org.http4s.implicits._
 
-class ServerSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThen with Matchers {
+class BasicRouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThen with Matchers {
 
   trait AnswerMaker[F[_]] {
     def sayHello(name: String): F[String]
