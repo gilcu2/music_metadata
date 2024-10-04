@@ -1,6 +1,6 @@
 import cats.effect._
 
-object debug {
+object Util {
   implicit class DebugHelper[A](ioa: IO[A]) {
     def debug_thread: IO[A] =
       for {

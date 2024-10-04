@@ -1,5 +1,5 @@
 import cats.effect._
-import debug._
+import Util._
 import doobie.hikari.HikariTransactor
 import org.scalatest._
 import org.scalatest.matchers.should.Matchers
