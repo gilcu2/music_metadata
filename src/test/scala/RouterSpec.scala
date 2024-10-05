@@ -38,12 +38,13 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
           response <- routes.routes.orNotFound.run(
             Request(method = Method.GET, uri = Uri.unsafeFromString(s"/hello/$name"))
           )
-        } yield response
+          msg <- response.as[String].map(decode[String])
+        } yield (response, msg)
       )
 
       Then("it is expected")
-      r.asserting(_.status mustBe Status.Ok)
-      r.asserting(r => toObjectUnsafe[String](r.body) mustBe expected)
+      r.asserting(_._1.status mustBe Status.Ok)
+      r.asserting(_._2 mustBe expected)
     }
 
     it("duplicate number") {
@@ -62,15 +63,16 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
           response <- routes.routes.orNotFound.run(
             Request(method = Method.GET, uri = Uri.unsafeFromString(s"/duplicate/$number"))
           )
-        } yield response
+          duplication <- response.as[String].map(decode[Long])
+        } yield (response, duplication)
       )
 
       Then("it is expected")
-      r.asserting(_.status mustBe Status.Ok)
-      r.asserting(r => toObjectUnsafe[Long](r.body) mustBe expected)
+      r.asserting(_._1.status mustBe Status.Ok)
+      r.asserting(_._2 mustBe expected)
     }
 
-    it("produce custom message in other route") {
+    it("produce custom message if other route") {
       Given("number")
       val number = 3
 
@@ -86,12 +88,13 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
           response <- routes.routes.orNotFound.run(
             Request(method = Method.GET, uri = Uri.unsafeFromString(s"/duplicate1/$number"))
           )
-        } yield response
+          responseBody <- response.as[String].map(decode[String])
+        } yield (response, responseBody)
       )
 
       Then("it is expected")
-      r.asserting(_.status mustBe Status.NotFound)
-      r.asserting(r => toObjectUnsafe[String](r.body) mustBe expected)
+      r.asserting(_._1.status mustBe Status.NotFound)
+      r.asserting(_._2 mustBe expected)
     }
 
     it("create and retrieve an artist") {
@@ -108,16 +111,17 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
           createdResponse <- routes.run(
             Request(method = Method.POST, uri = uri"/artist").withEntity(artist.asJson)
           ).debug()
-          id = toObjectUnsafe[Artist](createdResponse.body).id.get
+          id <- createdResponse.as[String].map(decode[Artist](_).id.get)
           response <- routes.run(
             Request(method = Method.GET, uri = Uri.unsafeFromString(s"/artist/$id"))
           ).debug()
-        } yield response
+          artist <- response.as[String].map(decode[Artist])
+        } yield (response, artist)
       )
 
       Then("it is expected")
-      r.asserting(_.status mustBe Status.Ok)
-      r.asserting(r => toObjectUnsafe[Artist](r.body).name mustBe name)
+      r.asserting(_._1.status mustBe Status.Ok)
+      r.asserting(_._2.name mustBe name)
     }
 
     it("update an artist") {
@@ -135,19 +139,20 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
           createdResponse <- routes.run(
             Request(method = Method.POST, uri = uri"/artist").withEntity(artist.asJson)
           ).debug()
-          id = toObjectUnsafe[Artist](createdResponse.body).id.get
+          id <- createdResponse.as[String].map(decode[Artist](_).id.get)
           _ <-routes.run(
             Request(method = Method.PUT, uri = Uri.unsafeFromString(s"/artist/$id")).withEntity(newName.asJson)
           ).debug()
           response <- routes.run(
             Request(method = Method.GET, uri = Uri.unsafeFromString(s"/artist/$id"))
           ).debug()
-        } yield response
+          artist <- response.as[String].map(decode[Artist])
+        } yield (response, artist)
       )
 
       Then("it is expected")
-      r.asserting(_.status mustBe Status.Ok)
-      r.asserting(r => toObjectUnsafe[Artist](r.body).name mustBe newName)
+      r.asserting(_._1.status mustBe Status.Ok)
+      r.asserting(_._2.name mustBe newName)
     }
 
     it("create and retrieve an artist alias") {
@@ -156,30 +161,31 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
       val artist = Artist(name = name)
       val aliasName="The crazy"
 
-      When("create and get artist")
+      When("create and get artist alias")
       val r = transactor.use(t =>
         for {
           _ <- DB.initialize(t)
           repository = new Repository(t)
           routes     = new Routes(repository).routes.orNotFound
-          createdArtist <- routes.run(
+          createdArtistResponse <- routes.run(
             Request(method = Method.POST, uri = uri"/artist").withEntity(artist.asJson)
           ).debug()
-          artistId = toObjectUnsafe[Artist](createdArtist.body).id.get
+          artistId <- createdArtistResponse.as[String].map(decode[Artist](_).id.get)
           artistAlias=ArtistAlias(name = aliasName,artistId = artistId)
           createdAlias <- routes.run(
             Request(method = Method.POST, uri = uri"/artist_alias").withEntity(artistAlias.asJson)
           ).debug()
-          aliasId = toObjectUnsafe[ArtistAlias](createdAlias.body).id.get
+          aliasId <- createdAlias.as[String].map(decode[ArtistAlias](_).id.get)
           response <- routes.run(
             Request(method = Method.GET, uri = Uri.unsafeFromString(s"/artist_alias/$aliasId"))
           ).debug()
-        } yield response
+          alias <- response.as[String].map(decode[ArtistAlias])
+        } yield (response, alias)
       )
 
       Then("it is expected")
-      r.asserting(_.status mustBe Status.Ok)
-      r.asserting(r => toObjectUnsafe[ArtistAlias](r.body).name mustBe aliasName)
+      r.asserting(_._1.status mustBe Status.Ok)
+      r.asserting(_._2.name mustBe aliasName)
     }
 
     it("create and retrieve an genre") {
@@ -196,16 +202,17 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
           createdResponse <- routes.run(
             Request(method = Method.POST, uri = uri"/genre").withEntity(genre.asJson)
           ).debug()
-          genreId = toObjectUnsafe[Genre](createdResponse.body).id.get
+          genreId <- createdResponse.as[String].map(decode[Genre](_).id.get)
           response <- routes.run(
             Request(method = Method.GET, uri = Uri.unsafeFromString(s"/genre/$genreId"))
           ).debug()
-        } yield response
+          genre <- response.as[String].map(decode[Genre])
+        } yield (response, genre)
       )
 
       Then("it is expected")
-      r.asserting(_.status mustBe Status.Ok)
-      r.asserting(r => toObjectUnsafe[Genre](r.body).name mustBe genreName)
+      r.asserting(_._1.status mustBe Status.Ok)
+      r.asserting(_._2.name mustBe genreName)
     }
 
     it("create and retrieve an track") {
@@ -226,28 +233,29 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
           createdGenre <- routes.run(
             Request(method = Method.POST, uri = uri"/genre").withEntity(genre.asJson)
           ).debug()
-          genreId = toObjectUnsafe[Genre](createdGenre.body).id.get
+          genreId <- createdGenre.as[String].map(decode[Genre](_).id.get)
           createdArtist <- routes.run(
             Request(method = Method.POST, uri = uri"/artist").withEntity(artist.asJson)
           ).debug()
-          artistId = toObjectUnsafe[Artist](createdArtist.body).id.get
+          artistId <- createdArtist.as[String].map(decode[Artist](_).id.get)
           track = Track(title = title, duration = duration, artistId = artistId, genreId = genreId)
           createdTrack <- routes.run(
             Request(method = Method.POST, uri = uri"/track").withEntity(track.asJson)
           ).debug()
-          trackId = toObjectUnsafe[Track](createdTrack.body).id.get
+          trackId <- createdTrack.as[String].map(decode[Track](_).id.get)
           response <- routes.run(
             Request(method = Method.GET, uri = Uri.unsafeFromString(s"/track/$trackId"))
           ).debug()
-        } yield response
+          track <- response.as[String].map(decode[Track])
+        } yield (response, track)
       )
 
       Then("it is expected")
-      r.asserting(_.status mustBe Status.Ok)
-      r.asserting(r => toObjectUnsafe[Track](r.body).title mustBe title)
+      r.asserting(_._1.status mustBe Status.Ok)
+      r.asserting(_._2.title mustBe title)
     }
 
-    it("retrieve artist tracks") {
+    it("create and retrieve an track") {
       Given("genre")
       val artistName = "Silvio"
       val artist = Artist(name = artistName)
@@ -256,7 +264,7 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
       val title = "Unicornio azul"
       val duration = 180
 
-      When("create and get track")
+      When("create and retireve customer")
       val r = transactor.use(t =>
         for {
           _ <- DB.initialize(t)
@@ -265,32 +273,76 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
           createdGenre <- routes.run(
             Request(method = Method.POST, uri = uri"/genre").withEntity(genre.asJson)
           ).debug()
-          genreId = toObjectUnsafe[Genre](createdGenre.body).id.get
+          genreId <- createdGenre.as[String].map(decode[Genre](_).id.get)
           createdArtist <- routes.run(
             Request(method = Method.POST, uri = uri"/artist").withEntity(artist.asJson)
           ).debug()
-          artistId = toObjectUnsafe[Artist](createdArtist.body).id.get
+          artistId <- createdArtist.as[String].map(decode[Artist](_).id.get)
           track = Track(title = title, duration = duration, artistId = artistId, genreId = genreId)
           createdTrack <- routes.run(
             Request(method = Method.POST, uri = uri"/track").withEntity(track.asJson)
           ).debug()
-          trackId = toObjectUnsafe[Track](createdTrack.body).id.get
+          trackId <- createdTrack.as[String].map(decode[Track](_).id.get)
           response <- routes.run(
             Request(method = Method.GET, uri = Uri.unsafeFromString(s"/track/$trackId"))
           ).debug()
-        } yield response
+          track <- response.as[String].map(decode[Track])
+        } yield (response, track)
       )
 
       Then("it is expected")
-      r.asserting(_.status mustBe Status.Ok)
-      r.asserting(r => toObjectUnsafe[Track](r.body).title mustBe title)
+      r.asserting(_._1.status mustBe Status.Ok)
+      r.asserting(_._2.title mustBe title)
+    }
+
+    it("retrieve artist tracks") {
+      Given("genre")
+      val artistName = "Silvio"
+      val artist = Artist(name = artistName)
+      val genreName = "Balada"
+      val genre = Genre(name = genreName)
+      val title1 = "Unicornio azul"
+      val title2 = "La masa"
+      val duration = 180
+
+      When("create tracks")
+      val r = transactor.use(t =>
+        for {
+          _ <- DB.initialize(t)
+          repository = new Repository(t)
+          routes = new Routes(repository).routes.orNotFound
+          createdGenre <- routes.run(
+            Request(method = Method.POST, uri = uri"/genre").withEntity(genre.asJson)
+          ).debug()
+          genreId <- createdGenre.as[String].map(decode[Genre](_).id.get)
+          createdArtist <- routes.run(
+            Request(method = Method.POST, uri = uri"/artist").withEntity(artist.asJson)
+          ).debug()
+          artistId <- createdArtist.as[String].map(decode[Artist](_).id.get)
+          track1 = Track(title = title1, duration = duration, artistId = artistId, genreId = genreId)
+          _ <- routes.run(
+            Request(method = Method.POST, uri = uri"/track").withEntity(track1.asJson)
+          ).debug()
+          track2 = Track(title = title2, duration = duration, artistId = artistId, genreId = genreId)
+          _ <- routes.run(
+            Request(method = Method.POST, uri = uri"/track").withEntity(track2.asJson)
+          ).debug()
+          response <- routes.run(
+            Request(method = Method.GET, uri = Uri.unsafeFromString(s"/tracks/$artistId"))
+          ).debug()
+          tracks <- response.as[String].map(decode[List[Track]])
+        } yield (response, tracks)
+      )
+
+      Then("it is expected")
+      r.asserting(_._1.status mustBe Status.Ok)
+      r.asserting(_._2.map(_.title).toSet mustBe Set(title1, title2))
     }
 
   }
 
-  def toObjectUnsafe[A: Decoder](stream: fs2.Stream[IO, Byte]): A = {
-    val s = stream.compile.toVector.unsafeRunSync().map(_.toChar).mkString
-    println(s"toObject: $s")
+
+  def decode[A: Decoder](s: String): A = {
     parse(s).toOption.get.as[A].toOption.get
   }
 

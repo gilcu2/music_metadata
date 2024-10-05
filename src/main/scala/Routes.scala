@@ -31,14 +31,14 @@ class Routes(repository: Repository) {
     case GET -> Root / "artist" / LongVar(id) =>
       for {
         getResult <- repository.getArtist(id)
-        response <- mapResult(getResult)
+        response <- toResponse(getResult)
       } yield response
 
     case req@PUT -> Root / "artist" / LongVar(id) =>
       for {
         newName <- req.decodeJson[String]
         getResult <- repository.updateArtist(id, newName)
-        response <- mapResult(Right(getResult))
+        response <- toResponse(Right(getResult))
       } yield response
 
     case req@POST -> Root / "artist_alias" =>
@@ -52,7 +52,7 @@ class Routes(repository: Repository) {
     case GET -> Root / "artist_alias" / LongVar(id) =>
       for {
         getResult <- repository.getArtistAlias(id)
-        response <- mapResult(getResult)
+        response <- toResponse(getResult)
       } yield response
 
     case req@POST -> Root / "genre" =>
@@ -65,7 +65,7 @@ class Routes(repository: Repository) {
     case GET -> Root / "genre" / LongVar(id) =>
       for {
         getResult <- repository.getGenre(id)
-        response <- mapResult(getResult)
+        response <- toResponse(getResult)
       } yield response
 
     case req@POST -> Root / "track" =>
@@ -78,7 +78,7 @@ class Routes(repository: Repository) {
     case GET -> Root / "track" / LongVar(id) =>
       for {
         getResult <- repository.getTrack(id)
-        response <- mapResult(getResult)
+        response <- toResponse(getResult)
       } yield response
 
     case GET -> Root / "tracks" / LongVar(artistId) =>
@@ -90,6 +90,25 @@ class Routes(repository: Repository) {
         `Content-Type`(MediaType.application.json)
       )
 
+    case req@POST -> Root / "customer" =>
+      for {
+        customer <- req.decodeJson[Customer]
+        createdCustomer <- repository.createCustomer(customer)
+        response <- Created(createdCustomer.asJson)
+      } yield response
+
+    case GET -> Root / "customer" / LongVar(id) =>
+      for {
+        getResult <- repository.getCustomer(id)
+        response <- toResponse(getResult)
+      } yield response
+
+    case req@PUT -> Root / "customer" / LongVar(id) =>
+      for {
+        dayArtistId <- repository.updateCustomerDayArtist(id)
+        response <- toResponse(Right(dayArtistId))
+      } yield response
+
     case other =>  IO(Response(
       Status.NotFound,
       body = Stream(s"Route not found: ${other.uri}".asJson.noSpaces).through(utf8.encode),
@@ -98,7 +117,7 @@ class Routes(repository: Repository) {
 
   }
 
-  private def mapResult[A:Encoder](result: Either[RepositoryError, A]): IO[Response[IO]] = {
+  private def toResponse[A:Encoder](result: Either[RepositoryError, A]): IO[Response[IO]] = {
     result match {
       case Left(error) => IO(Response(
         Status.NotFound,
