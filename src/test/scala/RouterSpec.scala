@@ -1,4 +1,4 @@
-import Models.Artist
+import Models.{Artist, ArtistAlias, Genre, Track}
 import cats.effect._
 import cats.effect.testing.scalatest.AsyncIOSpec
 import cats.syntax.all._
@@ -14,7 +14,7 @@ import org.http4s.dsl.io._
 import org.http4s.implicits._
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.{funspec, GivenWhenThen}
+import org.scalatest.{GivenWhenThen, funspec}
 
 class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThen with Matchers {
 
@@ -118,6 +118,172 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
       Then("it is expected")
       r.asserting(_.status mustBe Status.Ok)
       r.asserting(r => toObjectUnsafe[Artist](r.body).name mustBe name)
+    }
+
+    it("update an artist") {
+      Given("artist")
+      val name   = "Juan Gabriel"
+      val artist = Artist(name = name)
+      val newName = "Juan Gabriel the crazy"
+
+      When("create and get artist")
+      val r = transactor.use(t =>
+        for {
+          _ <- DB.initialize(t)
+          repository = new Repository(t)
+          routes     = new Routes(repository).routes.orNotFound
+          createdResponse <- routes.run(
+            Request(method = Method.POST, uri = uri"/artist").withEntity(artist.asJson)
+          ).debug()
+          id = toObjectUnsafe[Artist](createdResponse.body).id.get
+          _ <-routes.run(
+            Request(method = Method.PUT, uri = Uri.unsafeFromString(s"/artist/$id")).withEntity(newName.asJson)
+          ).debug()
+          response <- routes.run(
+            Request(method = Method.GET, uri = Uri.unsafeFromString(s"/artist/$id"))
+          ).debug()
+        } yield response
+      )
+
+      Then("it is expected")
+      r.asserting(_.status mustBe Status.Ok)
+      r.asserting(r => toObjectUnsafe[Artist](r.body).name mustBe newName)
+    }
+
+    it("create and retrieve an artist alias") {
+      Given("artist")
+      val name   = "Juan Gabriel"
+      val artist = Artist(name = name)
+      val aliasName="The crazy"
+
+      When("create and get artist")
+      val r = transactor.use(t =>
+        for {
+          _ <- DB.initialize(t)
+          repository = new Repository(t)
+          routes     = new Routes(repository).routes.orNotFound
+          createdArtist <- routes.run(
+            Request(method = Method.POST, uri = uri"/artist").withEntity(artist.asJson)
+          ).debug()
+          artistId = toObjectUnsafe[Artist](createdArtist.body).id.get
+          artistAlias=ArtistAlias(name = aliasName,artistId = artistId)
+          createdAlias <- routes.run(
+            Request(method = Method.POST, uri = uri"/artist_alias").withEntity(artistAlias.asJson)
+          ).debug()
+          aliasId = toObjectUnsafe[ArtistAlias](createdAlias.body).id.get
+          response <- routes.run(
+            Request(method = Method.GET, uri = Uri.unsafeFromString(s"/artist_alias/$aliasId"))
+          ).debug()
+        } yield response
+      )
+
+      Then("it is expected")
+      r.asserting(_.status mustBe Status.Ok)
+      r.asserting(r => toObjectUnsafe[ArtistAlias](r.body).name mustBe aliasName)
+    }
+
+    it("create and retrieve an genre") {
+      Given("genre")
+      val genreName = "Balada"
+      val genre = Genre(name = genreName)
+
+      When("create and get track")
+      val r = transactor.use(t =>
+        for {
+          _ <- DB.initialize(t)
+          repository = new Repository(t)
+          routes = new Routes(repository).routes.orNotFound
+          createdResponse <- routes.run(
+            Request(method = Method.POST, uri = uri"/genre").withEntity(genre.asJson)
+          ).debug()
+          genreId = toObjectUnsafe[Genre](createdResponse.body).id.get
+          response <- routes.run(
+            Request(method = Method.GET, uri = Uri.unsafeFromString(s"/genre/$genreId"))
+          ).debug()
+        } yield response
+      )
+
+      Then("it is expected")
+      r.asserting(_.status mustBe Status.Ok)
+      r.asserting(r => toObjectUnsafe[Genre](r.body).name mustBe genreName)
+    }
+
+    it("create and retrieve an track") {
+      Given("genre")
+      val artistName = "Silvio"
+      val artist = Artist(name = artistName)
+      val genreName = "Balada"
+      val genre = Genre(name = genreName)
+      val title = "Unicornio azul"
+      val duration = 180
+
+      When("create and get track")
+      val r = transactor.use(t =>
+        for {
+          _ <- DB.initialize(t)
+          repository = new Repository(t)
+          routes = new Routes(repository).routes.orNotFound
+          createdGenre <- routes.run(
+            Request(method = Method.POST, uri = uri"/genre").withEntity(genre.asJson)
+          ).debug()
+          genreId = toObjectUnsafe[Genre](createdGenre.body).id.get
+          createdArtist <- routes.run(
+            Request(method = Method.POST, uri = uri"/artist").withEntity(artist.asJson)
+          ).debug()
+          artistId = toObjectUnsafe[Artist](createdArtist.body).id.get
+          track = Track(title = title, duration = duration, artistId = artistId, genreId = genreId)
+          createdTrack <- routes.run(
+            Request(method = Method.POST, uri = uri"/track").withEntity(track.asJson)
+          ).debug()
+          trackId = toObjectUnsafe[Track](createdTrack.body).id.get
+          response <- routes.run(
+            Request(method = Method.GET, uri = Uri.unsafeFromString(s"/track/$trackId"))
+          ).debug()
+        } yield response
+      )
+
+      Then("it is expected")
+      r.asserting(_.status mustBe Status.Ok)
+      r.asserting(r => toObjectUnsafe[Track](r.body).title mustBe title)
+    }
+
+    it("retrieve artist tracks") {
+      Given("genre")
+      val artistName = "Silvio"
+      val artist = Artist(name = artistName)
+      val genreName = "Balada"
+      val genre = Genre(name = genreName)
+      val title = "Unicornio azul"
+      val duration = 180
+
+      When("create and get track")
+      val r = transactor.use(t =>
+        for {
+          _ <- DB.initialize(t)
+          repository = new Repository(t)
+          routes = new Routes(repository).routes.orNotFound
+          createdGenre <- routes.run(
+            Request(method = Method.POST, uri = uri"/genre").withEntity(genre.asJson)
+          ).debug()
+          genreId = toObjectUnsafe[Genre](createdGenre.body).id.get
+          createdArtist <- routes.run(
+            Request(method = Method.POST, uri = uri"/artist").withEntity(artist.asJson)
+          ).debug()
+          artistId = toObjectUnsafe[Artist](createdArtist.body).id.get
+          track = Track(title = title, duration = duration, artistId = artistId, genreId = genreId)
+          createdTrack <- routes.run(
+            Request(method = Method.POST, uri = uri"/track").withEntity(track.asJson)
+          ).debug()
+          trackId = toObjectUnsafe[Track](createdTrack.body).id.get
+          response <- routes.run(
+            Request(method = Method.GET, uri = Uri.unsafeFromString(s"/track/$trackId"))
+          ).debug()
+        } yield response
+      )
+
+      Then("it is expected")
+      r.asserting(_.status mustBe Status.Ok)
+      r.asserting(r => toObjectUnsafe[Track](r.body).title mustBe title)
     }
 
   }
