@@ -46,6 +46,54 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
       r.asserting(r => toObjectUnsafe[String](r.body) mustBe expected)
     }
 
+    it("duplicate number") {
+      Given("number")
+      val number = 3
+
+      And("expected answer")
+      val expected = 2*number
+
+      When("get the response")
+      val r = transactor.use(t =>
+        for {
+          _ <- DB.initialize(t)
+          repository = new Repository(t)
+          routes     = new Routes(repository)
+          response <- routes.routes.orNotFound.run(
+            Request(method = Method.GET, uri = Uri.unsafeFromString(s"/duplicate/$number"))
+          )
+        } yield response
+      )
+
+      Then("it is expected")
+      r.asserting(_.status mustBe Status.Ok)
+      r.asserting(r => toObjectUnsafe[Long](r.body) mustBe expected)
+    }
+
+    it("produce custom message in other route") {
+      Given("number")
+      val number = 3
+
+      And("expected answer")
+      val expected = s"Route not found: /duplicate1/$number"
+
+      When("get the response")
+      val r = transactor.use(t =>
+        for {
+          _ <- DB.initialize(t)
+          repository = new Repository(t)
+          routes     = new Routes(repository)
+          response <- routes.routes.orNotFound.run(
+            Request(method = Method.GET, uri = Uri.unsafeFromString(s"/duplicate1/$number"))
+          )
+        } yield response
+      )
+
+      Then("it is expected")
+      r.asserting(_.status mustBe Status.NotFound)
+      r.asserting(r => toObjectUnsafe[String](r.body) mustBe expected)
+    }
+
     it("create and retrieve an artist") {
       Given("artist")
       val name   = "Juan Gabriel"
@@ -59,11 +107,11 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
           routes     = new Routes(repository).routes.orNotFound
           createdResponse <- routes.run(
             Request(method = Method.POST, uri = uri"/artist").withEntity(artist.asJson)
-          )
-          id = toObjectUnsafe[Artist](createdResponse.body).id
+          ).debug()
+          id = toObjectUnsafe[Artist](createdResponse.body).id.get
           response <- routes.run(
             Request(method = Method.GET, uri = Uri.unsafeFromString(s"/artist/$id"))
-          )
+          ).debug()
         } yield response
       )
 
@@ -76,6 +124,7 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
 
   def toObjectUnsafe[A: Decoder](stream: fs2.Stream[IO, Byte]): A = {
     val s = stream.compile.toVector.unsafeRunSync().map(_.toChar).mkString
+    println(s"toObject: $s")
     parse(s).toOption.get.as[A].toOption.get
   }
 

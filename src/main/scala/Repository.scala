@@ -1,4 +1,4 @@
-import Models.{Artist, ArtistAlias, Customer, Genre, NotFoundError, Track}
+import Models.{Artist, ArtistAlias, Customer, Genre, Track}
 import cats.effect.IO
 import doobie.implicits._
 import doobie.util.fragment.Fragment
@@ -29,11 +29,11 @@ class Repository(transactor: Transactor[IO]) {
       }
   }
 
-  def getArtist(id: Long): IO[Either[NotFoundError.type, Artist]] = {
+  def getArtist(id: Long): IO[Either[RepositoryError, Artist]] = {
     sql"SELECT * FROM artist WHERE id = $id"
       .query[Artist].option.transact(transactor).map {
         case Some(artist) => Right(artist)
-        case None => Left(NotFoundError)
+        case None => Left(RepositoryError(s"artist $id not found"))
       }
   }
 
@@ -70,11 +70,11 @@ class Repository(transactor: Transactor[IO]) {
       }
   }
 
-  def getGenre(id: Long): IO[Either[NotFoundError.type, Genre]] = {
+  def getGenre(id: Long): IO[Either[RepositoryError, Genre]] = {
     sql"SELECT * FROM genre WHERE id = $id"
       .query[Genre].option.transact(transactor).map {
         case Some(genre) => Right(genre)
-        case None => Left(NotFoundError)
+        case None => Left(RepositoryError(s"genre $id not found"))
       }
   }
 
@@ -101,11 +101,11 @@ class Repository(transactor: Transactor[IO]) {
       }
   }
 
-  def getArtistAlias(id: Long): IO[Either[NotFoundError.type, ArtistAlias]] = {
+  def getArtistAlias(id: Long): IO[Either[RepositoryError, ArtistAlias]] = {
     sql"SELECT * FROM artist_alias WHERE id = $id"
       .query[ArtistAlias].option.transact(transactor).map {
         case Some(artistAlias) => Right(artistAlias)
-        case None => Left(NotFoundError)
+        case None => Left(RepositoryError(s"artist alias $id not found"))
       }
   }
 
@@ -134,11 +134,11 @@ class Repository(transactor: Transactor[IO]) {
       }
   }
 
-  def getTrack(id: Long): IO[Either[NotFoundError.type, Track]] = {
+  def getTrack(id: Long): IO[Either[RepositoryError, Track]] = {
     sql"SELECT * FROM track WHERE id = $id"
       .query[Track].option.transact(transactor).map {
         case Some(track) => Right(track)
-        case None => Left(NotFoundError)
+        case None => Left(RepositoryError(s"track $id not found"))
       }
   }
 
@@ -172,11 +172,11 @@ class Repository(transactor: Transactor[IO]) {
       }
   }
 
-  def getCustomer(id: Long): IO[Either[NotFoundError.type, Customer]] = {
+  def getCustomer(id: Long): IO[Either[RepositoryError, Customer]] = {
     sql"SELECT * FROM customer WHERE id = $id"
       .query[Customer].option.transact(transactor).map {
         case Some(customer) => Right(customer)
-        case None => Left(NotFoundError)
+        case None => Left(RepositoryError(s"customer $id not found"))
       }
   }
 
@@ -262,4 +262,7 @@ class Repository(transactor: Transactor[IO]) {
 //      .query[AirportReview].stream.transact(transactor)
 //  }
 
+
 }
+
+case class RepositoryError(s:String)

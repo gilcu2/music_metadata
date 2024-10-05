@@ -16,6 +16,4 @@ object Models {
 
   case class Customer(id: Option[Long] = None, name: String, dayArtistId: Option[Long] = None)
 
-  case object NotFoundError
-
 }
