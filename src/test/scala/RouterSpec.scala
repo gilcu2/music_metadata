@@ -1,16 +1,13 @@
-import Models.{Artist, ArtistAlias, Genre, Track}
+import Models._
 import cats.effect._
 import cats.effect.testing.scalatest.AsyncIOSpec
-import cats.syntax.all._
 import doobie.hikari.HikariTransactor
-import doobie.util.transactor
+import io.circe.Decoder
 import io.circe.generic.auto._
+import io.circe.parser._
 import io.circe.syntax._
-import io.circe.{Decoder, Encoder}
 import org.http4s._
 import org.http4s.circe._
-import io.circe.parser._
-import org.http4s.dsl.io._
 import org.http4s.implicits._
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.matchers.should.Matchers
@@ -72,7 +69,7 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
       r.asserting(_._2 mustBe expected)
     }
 
-    it("produce custom message if other route") {
+    it("produce custom message when unrecognized route route") {
       Given("number")
       val number = 3
 
@@ -110,11 +107,11 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
           routes     = new Routes(repository).routes.orNotFound
           createdResponse <- routes.run(
             Request(method = Method.POST, uri = uri"/artist").withEntity(artist.asJson)
-          ).debug()
+          )
           id <- createdResponse.as[String].map(decode[Artist](_).id.get)
           response <- routes.run(
             Request(method = Method.GET, uri = Uri.unsafeFromString(s"/artist/$id"))
-          ).debug()
+          )
           artist <- response.as[String].map(decode[Artist])
         } yield (response, artist)
       )
@@ -138,14 +135,14 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
           routes     = new Routes(repository).routes.orNotFound
           createdResponse <- routes.run(
             Request(method = Method.POST, uri = uri"/artist").withEntity(artist.asJson)
-          ).debug()
+          )
           id <- createdResponse.as[String].map(decode[Artist](_).id.get)
           _ <-routes.run(
             Request(method = Method.PUT, uri = Uri.unsafeFromString(s"/artist/$id")).withEntity(newName.asJson)
-          ).debug()
+          )
           response <- routes.run(
             Request(method = Method.GET, uri = Uri.unsafeFromString(s"/artist/$id"))
-          ).debug()
+          )
           artist <- response.as[String].map(decode[Artist])
         } yield (response, artist)
       )
@@ -169,16 +166,16 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
           routes     = new Routes(repository).routes.orNotFound
           createdArtistResponse <- routes.run(
             Request(method = Method.POST, uri = uri"/artist").withEntity(artist.asJson)
-          ).debug()
+          )
           artistId <- createdArtistResponse.as[String].map(decode[Artist](_).id.get)
           artistAlias=ArtistAlias(name = aliasName,artistId = artistId)
           createdAlias <- routes.run(
             Request(method = Method.POST, uri = uri"/artist_alias").withEntity(artistAlias.asJson)
-          ).debug()
+          )
           aliasId <- createdAlias.as[String].map(decode[ArtistAlias](_).id.get)
           response <- routes.run(
             Request(method = Method.GET, uri = Uri.unsafeFromString(s"/artist_alias/$aliasId"))
-          ).debug()
+          )
           alias <- response.as[String].map(decode[ArtistAlias])
         } yield (response, alias)
       )
@@ -201,11 +198,11 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
           routes = new Routes(repository).routes.orNotFound
           createdResponse <- routes.run(
             Request(method = Method.POST, uri = uri"/genre").withEntity(genre.asJson)
-          ).debug()
+          )
           genreId <- createdResponse.as[String].map(decode[Genre](_).id.get)
           response <- routes.run(
             Request(method = Method.GET, uri = Uri.unsafeFromString(s"/genre/$genreId"))
-          ).debug()
+          )
           genre <- response.as[String].map(decode[Genre])
         } yield (response, genre)
       )
@@ -232,20 +229,20 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
           routes = new Routes(repository).routes.orNotFound
           createdGenre <- routes.run(
             Request(method = Method.POST, uri = uri"/genre").withEntity(genre.asJson)
-          ).debug()
+          )
           genreId <- createdGenre.as[String].map(decode[Genre](_).id.get)
           createdArtist <- routes.run(
             Request(method = Method.POST, uri = uri"/artist").withEntity(artist.asJson)
-          ).debug()
+          )
           artistId <- createdArtist.as[String].map(decode[Artist](_).id.get)
           track = Track(title = title, duration = duration, artistId = artistId, genreId = genreId)
           createdTrack <- routes.run(
             Request(method = Method.POST, uri = uri"/track").withEntity(track.asJson)
-          ).debug()
+          )
           trackId <- createdTrack.as[String].map(decode[Track](_).id.get)
           response <- routes.run(
             Request(method = Method.GET, uri = Uri.unsafeFromString(s"/track/$trackId"))
-          ).debug()
+          )
           track <- response.as[String].map(decode[Track])
         } yield (response, track)
       )
@@ -255,44 +252,86 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
       r.asserting(_._2.title mustBe title)
     }
 
-    it("create and retrieve an track") {
-      Given("genre")
-      val artistName = "Silvio"
-      val artist = Artist(name = artistName)
-      val genreName = "Balada"
-      val genre = Genre(name = genreName)
-      val title = "Unicornio azul"
-      val duration = 180
+    it("create and retrieve an customer") {
+      Given("customer")
+      val customerName = "Juan"
+      val customer = Customer(name = customerName)
 
-      When("create and retireve customer")
+      When("create and retrieve customer")
       val r = transactor.use(t =>
         for {
           _ <- DB.initialize(t)
           repository = new Repository(t)
           routes = new Routes(repository).routes.orNotFound
-          createdGenre <- routes.run(
-            Request(method = Method.POST, uri = uri"/genre").withEntity(genre.asJson)
-          ).debug()
-          genreId <- createdGenre.as[String].map(decode[Genre](_).id.get)
-          createdArtist <- routes.run(
-            Request(method = Method.POST, uri = uri"/artist").withEntity(artist.asJson)
-          ).debug()
-          artistId <- createdArtist.as[String].map(decode[Artist](_).id.get)
-          track = Track(title = title, duration = duration, artistId = artistId, genreId = genreId)
-          createdTrack <- routes.run(
-            Request(method = Method.POST, uri = uri"/track").withEntity(track.asJson)
-          ).debug()
-          trackId <- createdTrack.as[String].map(decode[Track](_).id.get)
+          createdCustomer <- routes.run(
+            Request(method = Method.POST, uri = uri"/customer").withEntity(customer.asJson)
+          )
+          customerId <- createdCustomer.as[String].map(decode[Artist](_).id.get)
           response <- routes.run(
-            Request(method = Method.GET, uri = Uri.unsafeFromString(s"/track/$trackId"))
-          ).debug()
-          track <- response.as[String].map(decode[Track])
-        } yield (response, track)
+            Request(method = Method.GET, uri = Uri.unsafeFromString(s"/customer/$customerId"))
+          )
+          customer <- response.as[String].map(decode[Customer])
+        } yield (response, customer)
       )
 
       Then("it is expected")
       r.asserting(_._1.status mustBe Status.Ok)
-      r.asserting(_._2.title mustBe title)
+      r.asserting(_._2.name mustBe customerName)
+    }
+
+    it("update customer artist of the day") {
+      Given("Customer and artists")
+      val customer = Customer(name = "Juan Carlos")
+      val artist1 = Artist(name = "Donna Summer")
+      val artist2 = Artist(name = "Fito Paes")
+      val customerTable = "customer"
+      val artistTable = "artist"
+      val aliasTable = "artist_alias"
+      val trackTable = "track"
+
+      When("create and update artist of the day")
+      val r = transactor.use(t =>
+        for {
+          _ <- DB.initialize(t)
+          repository = new Repository(t)
+          _ <- repository.deleteAllRows(customerTable)
+          _ <- repository.deleteAllRows(aliasTable)
+          _ <- repository.deleteAllRows(trackTable)
+          _ <- repository.deleteAllRows(artistTable)
+          routes = new Routes(repository).routes.orNotFound
+          createdResponse <- routes.run(
+            Request(method = Method.POST, uri = uri"/artist").withEntity(artist1.asJson)
+          )
+          idArtist1 <- createdResponse.as[String].map(decode[Artist](_).id.get)
+          createdResponse <- routes.run(
+            Request(method = Method.POST, uri = uri"/artist").withEntity(artist2.asJson)
+          )
+          idArtist2 <- createdResponse.as[String].map(decode[Artist](_).id.get)
+          createdResponse <- routes.run(
+            Request(method = Method.POST, uri = uri"/customer").withEntity(customer.asJson)
+          )
+          createdCustomer <- createdResponse.as[String].map(s => decode[Customer](s))
+          (idCustomer, dayArtist0) = (createdCustomer.id.get, createdCustomer.dayArtistId)
+          update1Response <- routes.run(
+            Request(method = Method.PUT, uri = Uri.unsafeFromString(s"/customer/$idCustomer"))
+          )
+          dayArtist1 <- update1Response.as[String].map(s => decode[Option[Long]](s))
+          update2Response <- routes.run(
+            Request(method = Method.PUT, uri = Uri.unsafeFromString(s"/customer/$idCustomer"))
+          )
+          dayArtist2 <- update2Response.as[String].map(s => decode[Option[Long]](s))
+          update3Response <- routes.run(
+            Request(method = Method.PUT, uri = Uri.unsafeFromString(s"/customer/$idCustomer"))
+          )
+          dayArtist3 <- update3Response.as[String].map(s => decode[Option[Long]](s))
+        } yield (idArtist1, idArtist2, dayArtist0, dayArtist1, dayArtist2, dayArtist3)
+      )
+
+      Then("it is expected")
+      r.asserting(_._3 mustBe None)
+      r.asserting(tuple => tuple._4 mustBe Some(tuple._1))
+      r.asserting(tuple => tuple._5 mustBe Some(tuple._2))
+      r.asserting(tuple => tuple._6 mustBe Some(tuple._1))
     }
 
     it("retrieve artist tracks") {
@@ -313,23 +352,23 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
           routes = new Routes(repository).routes.orNotFound
           createdGenre <- routes.run(
             Request(method = Method.POST, uri = uri"/genre").withEntity(genre.asJson)
-          ).debug()
+          )
           genreId <- createdGenre.as[String].map(decode[Genre](_).id.get)
           createdArtist <- routes.run(
             Request(method = Method.POST, uri = uri"/artist").withEntity(artist.asJson)
-          ).debug()
+          )
           artistId <- createdArtist.as[String].map(decode[Artist](_).id.get)
           track1 = Track(title = title1, duration = duration, artistId = artistId, genreId = genreId)
           _ <- routes.run(
             Request(method = Method.POST, uri = uri"/track").withEntity(track1.asJson)
-          ).debug()
+          )
           track2 = Track(title = title2, duration = duration, artistId = artistId, genreId = genreId)
           _ <- routes.run(
             Request(method = Method.POST, uri = uri"/track").withEntity(track2.asJson)
-          ).debug()
+          )
           response <- routes.run(
             Request(method = Method.GET, uri = Uri.unsafeFromString(s"/tracks/$artistId"))
-          ).debug()
+          )
           tracks <- response.as[String].map(decode[List[Track]])
         } yield (response, tracks)
       )
@@ -340,7 +379,6 @@ class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThe
     }
 
   }
-
 
   def decode[A: Decoder](s: String): A = {
     parse(s).toOption.get.as[A].toOption.get

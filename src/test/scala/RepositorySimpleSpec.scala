@@ -167,6 +167,7 @@ class RepositorySimpleSpec extends funspec.AsyncFunSpec with AsyncIOSpec
 
     it("delete and count rows of table") {
       Given("table name and data")
+      val customerTable = "customer"
       val artistTable = "artist"
       val aliasTable = "artist_alias"
       val trackTable = "track"
@@ -178,6 +179,7 @@ class RepositorySimpleSpec extends funspec.AsyncFunSpec with AsyncIOSpec
         for {
           _ <- DB.initialize(t)
           repository = new Repository(t)
+          _ <- repository.deleteAllRows(customerTable)
           _ <- repository.deleteAllRows(aliasTable)
           _ <- repository.deleteAllRows(trackTable)
           _ <- repository.deleteAllRows(artistTable)

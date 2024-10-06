@@ -111,8 +111,8 @@ class RepositoryCustomerUpdateSpec
     }
 
     it("update customer artist of the day when 2 artist 3 updates") {
-      Given("Client and artists")
-      val client  = Customer(name = "Juan Carlos")
+      Given("Customer and artists")
+      val customer  = Customer(name = "Juan Carlos")
       val artist1 = Artist(name = "Donna Summer")
       val artist2 = Artist(name = "Fito Paes")
 
@@ -124,7 +124,7 @@ class RepositoryCustomerUpdateSpec
           repository = new Repository(t)
           _ <- repository.deleteAllRows(customerTable)
           _ <- repository.deleteAllRows(artistTable)
-          customerCreated <- repository.createCustomer(client).debug_thread
+          customerCreated <- repository.createCustomer(customer).debug_thread
           artist1         <- repository.createArtist(artist1).debug_thread
           artist2         <- repository.createArtist(artist2).debug_thread
           customerId = customerCreated.id.get

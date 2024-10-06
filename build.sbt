@@ -4,7 +4,7 @@ ThisBuild / scalaVersion := "2.13.15"
 
 val Http4sVersion = "0.23.16"
 val PureConfigVersion = "0.17.7"
-val CirceVersion = "0.14.9"
+val CirceVersion = "0.14.10"
 val DoobieVersion = "1.0.0-RC3"
 val H2Version = "2.3.232"
 val FlywayVersion = "10.18.2"
@@ -14,7 +14,7 @@ val ScalaTestVersion = "3.2.19"
 lazy val root = (project in file("."))
   .settings(
     name := "music_metadata",
-      libraryDependencies ++= Seq(
+    libraryDependencies ++= Seq(
         "org.http4s" %% "http4s-blaze-server" % Http4sVersion,
         "org.http4s" %% "http4s-blaze-client" % Http4sVersion,
         "org.http4s" %% "http4s-circe" % Http4sVersion,
@@ -23,6 +23,7 @@ lazy val root = (project in file("."))
         "com.github.pureconfig" %% "pureconfig-cats-effect" % PureConfigVersion,
         "io.circe" %% "circe-generic" % CirceVersion,
         "io.circe" %% "circe-parser" % CirceVersion,
+        "io.circe" %% "circe-literal" % CirceVersion,
         "org.tpolecat" %% "doobie-h2" % DoobieVersion,
         "org.tpolecat" %% "doobie-hikari" % DoobieVersion,
         "de.lhns" %% "doobie-flyway" % "0.4.0",
@@ -31,6 +32,7 @@ lazy val root = (project in file("."))
 
         "org.scalatest" %% "scalatest" % ScalaTestVersion % Test,
         "org.typelevel" %% "cats-effect-testing-scalatest" % "1.5.0" % Test,
-      )
+    ),
+    Test / parallelExecution := false
   )
 
