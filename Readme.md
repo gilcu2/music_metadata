@@ -47,7 +47,7 @@ to be done for use the service.
 
 ## Further steps to production
 - Implement changelog and version management
-- Implement continuous integration using tools like Github actions
 - Implement integration tests using databases with persistence and scalability like PostgreSQL
   Use tools like docker compose for running the test. Test scalability
 - Implement deployment using kubernetes for scalability and use a scalable database
+- Increase checking in continuous integration and implement continuos deployment
