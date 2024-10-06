@@ -3,6 +3,6 @@
 /target/scala-2.13/classes/
 /target/scala-2.13/test-classes/
 
-.bsp
-.idea
+.bsp/
+.idea/
 
