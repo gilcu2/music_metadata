@@ -12,7 +12,7 @@ jobs:
 
     - uses: coursier/setup-action@v1
       with:
-        jvm: openjdk@1.21.0-2
+        jvm: zulu:21.0.2
 
     - name: Test
       run: sbt test
