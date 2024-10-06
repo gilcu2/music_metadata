@@ -1,7 +1,6 @@
 name: checks
 
-on: [ pull_request, workflow_dispatch]
-#on: [ push, workflow_dispatch]
+on: [ push, pull_request, workflow_dispatch]
 
 jobs:
 
