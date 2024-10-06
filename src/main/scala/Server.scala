@@ -50,6 +50,6 @@ object Server {
     } yield Resources(transactor, config)
   }
 
-  case class Resources(transactor: HikariTransactor[IO], config: Config)
+  private case class Resources(transactor: HikariTransactor[IO], config: Config)
 
 }

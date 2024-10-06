@@ -1,25 +1,22 @@
 import Configs.Config
 import Models._
 import cats.effect.testing.scalatest.AsyncIOSpec
-import cats.effect.unsafe.IORuntime.global
 import cats.effect.{ExitCode, IO}
-import io.circe.Json
-import io.circe.generic.auto._
-import io.circe.literal._
 import io.circe.Decoder
 import io.circe.generic.auto._
+import io.circe.literal._
 import io.circe.parser._
 import io.circe.syntax._
 import org.http4s.blaze.client.BlazeClientBuilder
 import org.http4s.circe._
 import org.http4s.{Method, Request, Status, Uri}
 import org.scalatest.concurrent.Eventually
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{BeforeAndAfterAll, GivenWhenThen, funspec}
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.ExecutionContext
 
 class ServerSpec
   extends funspec.AsyncFunSpec
@@ -37,7 +34,7 @@ class ServerSpec
   private val logger       = LoggerFactory.getLogger(classOf[ServerSpec])
   private lazy val rootUrl = s"http://${config.server.host}:${config.server.port}/api"
 
-  private val clientResource  = BlazeClientBuilder[IO].resource
+  private val clientResource =BlazeClientBuilder[IO].resource
 
   override def beforeAll(): Unit = {
 
@@ -52,7 +49,23 @@ class ServerSpec
 
   describe("Repository server") {
 
-    it("create and retrieve an Artist1") {
+    it("retrieve hello") {
+      Given("name")
+      val name = "juan"
+
+      When("retrieve hello")
+      val r = clientResource.use(client =>
+        for {
+          result <- client.expect[String](s"$rootUrl/hello/$name")
+            .map(decode[String])
+        } yield result
+      )
+
+      Then("result is the expected")
+      r.asserting(_ mustBe s"Hi $name")
+    }
+
+    it("create and retrieve an Artist") {
       Given("Artist")
       val artist = Artist(name = "Juan Gabriel")
       val requestPost =
@@ -62,18 +75,27 @@ class ServerSpec
       When("Post and get the Artist")
       val r = clientResource.use ( client =>
         for {
-        response <- client.use(_.expect[Json](requestPost))
-      } yield response
-    )
+          createdArtist <- client.expect[String](requestPost)
+            .map(decode[Artist])
+          id = createdArtist.id.get
+          retrieved <- client.expect[String](s"$rootUrl/artist/$id")
+            .map(decode[Artist])
+        } yield retrieved
+      )
 
       Then("result is the expected")
-      assert(r.status mustBe Status.Ok)
+      r.asserting(_.name mustBe artist.name)
     }
+
 
 
   }
 
   private def resultHandler(result: Either[Throwable, ExitCode]): Unit =
     result.left.foreach(t => logger.error("Executing the http server failed", t))
+
+  private def decode[A: Decoder](s: String): A = {
+    parse(s).toOption.get.as[A].toOption.get
+  }
 
 }
