@@ -10,10 +10,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - uses: olafurpg/setup-scala@v14
+    - uses: coursier/setup-action@v1
       with:
-        java-version: openjdk@1.21.0-2
-        jabba-version: 0.14.0
+        jvm: openjdk@1.21.0-2
 
     - name: Test
       run: sbt test
