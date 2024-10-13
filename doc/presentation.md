@@ -25,22 +25,38 @@ https://github.com/gilcu2/music_metadata
 ---
 
 # Technology choices
-
-- Given the task the main point is: Defining the HTTP server library
-- Other libraries like for database management, configuration, logging, etc. are derived from compatibility with the main point
-- Language and Libraries versions must be production ready because the target is about showing the skills for make a production ready system
+- Programming language: Scala is a requirement
+- Versions: Production ready
+- Persistence and data processing
+- HTTP server library
+- Other libraries
+- Deployment
 
 ---
+
+## Persistence and data processing
+
+An SQL relational database is the best match:
+- Well and strict defines entities (Artist, Track, Customer) in 1-n relations 
+- SQL relational databases is the most mature DB technology
+- Easiest and more efficient way to implement the requirements
+- H2 memory for development
+- PostgreSQL for production
+- CockroachDB in case more scalability needed 
+
+
+--- 
 
 ## HTTP server library
 
 - **http4s** was chosen because Typelevel stack was mentioned in the job description 
 - The latest stable version warranties: 
   - strict type checking for input/output
+  - secure
   - high performance of many requests and resources deallocation (cats-effect based)
-  - high performance of large requests
-- zio-http was discarded because it is not Typelevel stack
-- playframework or akka-http were discarded because they are non-functional
+  - high performance of large requests (fs2 based)
+- zio-http was discarded (not Typelevel stack)
+- playframework or akka-http were discarded (non-functional)
 
 ---
 
@@ -50,7 +66,7 @@ https://github.com/gilcu2/music_metadata
 - DB migrations: flyway because doobie compatible
 - Serialization: circe (typelevel )
 - Configurations: pureconfig (typelevel )
-- DB: H2 (in memory for development ), for production an scalable SQL server like PostgreSQL
+- DB: H2 (in memory for development ), for production a scalable SQL server like PostgreSQL
 - Scala: 2.13 most stable and used
 - Java: 21 Latest LTS
 
@@ -60,15 +76,16 @@ https://github.com/gilcu2/music_metadata
 
 Several direction for further improvements:
 
-- Requirements: Given company purpose must be interesting to manage customer track relations like playing a song. Several endpoints can generate interesting results from this data
-- Development: Improve code linting, testing, check coverage, versioning, changelog
-- Deployment: Scalable DB server, Kubernetes deployment for scalability, logging and monitoring with professional tools 
+- Requirements: Manage customer track relation and related services
+- Development: Improve code linting, testing, test coverage, changelog, versioning, releasing
+- Security: SSL, Authentication, permissions, CSRF
+- Deployment: Scalability, Customer trust, logging, monitoring and alerts
 
 ---
 
-## Further requirements
+## Requirements
 
-- Provide additional customer experiences:
+- Provide additional experiences:
   - Which tracks and how many times the customer have listened in some time interval
   - Which artist and how many times the customer have listened in some time interval
   - Which tracks and how many times all customers have listened in some time interval
@@ -80,12 +97,27 @@ Several direction for further improvements:
 
 - Linting: scalafix, sonarqube
 - Testing: Integration tests again a production DB, scalability test
-- Set minimum coverage 
+- Set minimum test code coverage 
+- Implement a CHANGELOG file that keep track of all changes to the project
+- Versioning: Track the development states (semantic versioning)
+- Releasing: Track published states
+
+---
+
+# Security
+
+- SSL: Encrypt communication client-server
+- Authentication and permission: Allows to set the right to execute each service
+- CSRF: Protect against client program execute unwanted user actions
+
 
 ---
 
 ## Improve deployment
 
 - Scalable DB server (PostgreSQL, Redshift)
-- Kubernetes deployment for server scalability (EKS)
+- Domain name for app (Customer trust)
+- Kubernetes deployment:
+  - App scalability through load balancer and autoscaling pods
+  - SSL with authorized certificate (Customer trust)
 - Centralized logging management, monitoring and alerts like Cloudwatch
