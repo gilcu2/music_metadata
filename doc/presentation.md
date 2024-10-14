@@ -49,14 +49,14 @@ An SQL relational database is the best match:
 
 ## HTTP server library
 
-- **http4s** was chosen because Typelevel stack was mentioned in the job description 
-- The latest stable version warranties: 
+- **http4s** was chosen because:
+- Is part of Typelevel stack
+- Stable version warranties: 
   - strict type checking for input/output
   - secure
   - high performance of many requests and resources deallocation (cats-effect based)
   - high performance of large requests (fs2 based)
-- zio-http was discarded (not Typelevel stack)
-- playframework or akka-http were discarded (non-functional)
+- Discarded: zio-http (not Typelevel stack), playframework or akka-http (non-functional)
 
 ---
 
@@ -97,7 +97,7 @@ Several direction for further improvements:
 
 - Linting: scalafix, sonarqube
 - Testing: Integration tests again a production DB, scalability test
-- Set minimum test code coverage 
+- Set minimum test code coverage and improve coverage
 - Implement a CHANGELOG file that keep track of all changes to the project
 - Versioning: Track the development states (semantic versioning)
 - Releasing: Track published states

@@ -15,24 +15,36 @@ lazy val root = (project in file("."))
   .settings(
     name := "music_metadata",
     libraryDependencies ++= Seq(
-        "org.http4s" %% "http4s-blaze-server" % Http4sVersion,
-        "org.http4s" %% "http4s-blaze-client" % Http4sVersion,
-        "org.http4s" %% "http4s-circe" % Http4sVersion,
-        "org.http4s" %% "http4s-dsl" % Http4sVersion,
-        "com.github.pureconfig" %% "pureconfig" % PureConfigVersion,
-        "com.github.pureconfig" %% "pureconfig-cats-effect" % PureConfigVersion,
-        "io.circe" %% "circe-generic" % CirceVersion,
-        "io.circe" %% "circe-parser" % CirceVersion,
-        "io.circe" %% "circe-literal" % CirceVersion,
-        "org.tpolecat" %% "doobie-h2" % DoobieVersion,
-        "org.tpolecat" %% "doobie-hikari" % DoobieVersion,
-        "de.lhns" %% "doobie-flyway" % "0.4.0",
-        "com.h2database" % "h2" % H2Version,
-        "org.flywaydb" % "flyway-core" % FlywayVersion,
+      "org.http4s" %% "http4s-blaze-server" % Http4sVersion,
+      "org.http4s" %% "http4s-blaze-client" % Http4sVersion,
+      "org.http4s" %% "http4s-circe" % Http4sVersion,
+      "org.http4s" %% "http4s-dsl" % Http4sVersion,
+      "com.github.pureconfig" %% "pureconfig" % PureConfigVersion,
+      "com.github.pureconfig" %% "pureconfig-cats-effect" % PureConfigVersion,
+      "io.circe" %% "circe-generic" % CirceVersion,
+      "io.circe" %% "circe-parser" % CirceVersion,
+      "io.circe" %% "circe-literal" % CirceVersion,
+      "org.tpolecat" %% "doobie-h2" % DoobieVersion,
+      "org.tpolecat" %% "doobie-hikari" % DoobieVersion,
+      "de.lhns" %% "doobie-flyway" % "0.4.0",
+      "com.h2database" % "h2" % H2Version,
+      "org.flywaydb" % "flyway-core" % FlywayVersion,
 
-        "org.scalatest" %% "scalatest" % ScalaTestVersion % Test,
-        "org.typelevel" %% "cats-effect-testing-scalatest" % "1.5.0" % Test,
+      "org.scalatest" %% "scalatest" % ScalaTestVersion % Test,
+      "org.typelevel" %% "cats-effect-testing-scalatest" % "1.5.0" % Test,
     ),
-    Test / parallelExecution := false
+    Test / parallelExecution := false,
+    coverageEnabled := true,
+  )
+
+lazy val integration = (project in file("it_test"))
+  .dependsOn(root)
+  .settings(
+    publish / skip := true,
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % ScalaTestVersion % Test,
+      "org.typelevel" %% "cats-effect-testing-scalatest" % "1.5.0" % Test,
+    ),
+    Test / parallelExecution := false,
   )
 
