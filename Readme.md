@@ -43,7 +43,7 @@ In a browser use the link http://localhost:8080/api/hello/ice
 
 For more complex action like create an artist another tools like curl are needed. 
 The tests in src/test/scala/ like ServerSpec.scala, RouterSpec.scala show what have 
-to be done for use the service.
+to be done for use the service. An example in scripts
 
 ## Further steps to production
 - Implement changelog and version management

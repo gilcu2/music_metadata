@@ -2,6 +2,6 @@
 <project version="4">
   <component name="ScalaCompilerConfiguration">
     <option name="separateProdTestSources" value="false" />
-    <profile name="sbt 1" modules="music_metadata" />
+    <profile name="sbt 1" modules="music_metadata,music_metadata.integration" />
   </component>
 </project>

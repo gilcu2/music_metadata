@@ -1,3 +1,4 @@
+import Configs.Config
 import Models._
 import cats.effect._
 import cats.effect.testing.scalatest.AsyncIOSpec
@@ -15,7 +16,11 @@ import org.scalatest.{GivenWhenThen, funspec}
 
 class RouterSpec extends funspec.AsyncFunSpec with AsyncIOSpec with GivenWhenThen with Matchers {
 
-  val transactor: Resource[IO, HikariTransactor[IO]] = DB.transactor()
+  val configFile = "test.conf"
+  val transactor: Resource[IO, HikariTransactor[IO]] = for {
+    config <- Config.load(configFile)
+    transactor <- DB.transactor(config)
+  } yield transactor
 
   describe("service") {
 

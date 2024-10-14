@@ -1,3 +1,4 @@
+import Configs.Config
 import cats.effect._
 import Util._
 import doobie.hikari.HikariTransactor
@@ -10,7 +11,11 @@ import Models._
 class RepositorySimpleSpec extends funspec.AsyncFunSpec with AsyncIOSpec
   with  GivenWhenThen with Matchers {
 
-  val transactor: Resource[IO, HikariTransactor[IO]] = DB.transactor()
+  val configFile = "test.conf"
+  val transactor: Resource[IO, HikariTransactor[IO]] = for {
+    config <- Config.load(configFile)
+    transactor <- DB.transactor(config)
+  } yield transactor
 
   describe("Repository simple functionalities") {
 
@@ -138,7 +143,7 @@ class RepositorySimpleSpec extends funspec.AsyncFunSpec with AsyncIOSpec
       val artist = Artist(name = "Donna Summer")
       val genre = Genre(name = "Rock")
       val title1 = "Let it be"
-      var title2 = "Yesterday"
+      val title2 = "Yesterday"
       val length = 180
 
       When("save to repo and load result")

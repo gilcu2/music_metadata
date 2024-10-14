@@ -1,18 +1,19 @@
+import Configs.Config
 import cats.effect._
 import doobie.hikari.HikariTransactor
 import com.zaxxer.hikari.HikariConfig
 import org.flywaydb.core.Flyway
 
 object DB {
-  def transactor(): Resource[IO, HikariTransactor[IO]] =
+  def transactor(config: Config): Resource[IO, HikariTransactor[IO]] =
     for {
       hikariConfig <- Resource.pure {
-        val config = new HikariConfig()
-        config.setDriverClassName("org.h2.Driver")
-        config.setJdbcUrl("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1")
-        config.setUsername("sa")
-        config.setPassword("")
-        config
+        val hikariConfig = new HikariConfig()
+        hikariConfig.setDriverClassName(config.database.driver)
+        hikariConfig.setJdbcUrl(config.database.url)
+        hikariConfig.setUsername(config.database.user)
+        hikariConfig.setPassword(config.database.password)
+        hikariConfig
       }
       xa <- HikariTransactor.fromHikariConfig[IO](hikariConfig)
     } yield xa

@@ -1,4 +1,5 @@
 
+import Configs.Config
 import cats.effect._
 import Util._
 import doobie.hikari.HikariTransactor
@@ -8,10 +9,14 @@ import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import cats.effect.testing.scalatest.AsyncIOSpec
 import Models._
 
-class RepositorySimpleSpec extends funspec.AsyncFunSpec with AsyncIOSpec
-  with  GivenWhenThen with Matchers {
+class RepositoryItSpec extends funspec.AsyncFunSpec with AsyncIOSpec
+  with GivenWhenThen with Matchers {
 
-  val transactor: Resource[IO, HikariTransactor[IO]] = DB.transactor()
+  val configFile = "it_test.conf"
+  val transactor: Resource[IO, HikariTransactor[IO]] = for {
+    config <- Config.load(configFile)
+    transactor <- DB.transactor(config)
+  } yield transactor
 
   describe("Repository simple functionalities") {
 
@@ -31,23 +36,7 @@ class RepositorySimpleSpec extends funspec.AsyncFunSpec with AsyncIOSpec
 
       Then("Value is the expected")
       r.asserting(_.name mustBe artist.name)
-      it("fail returning Artist for absent id") {
-        Given("absent id")
-        val artistId = -1
-
-        When("load result")
-        val r = transactor.use(t =>
-          for {
-            _ <- DB.initialize(t)
-            repository = new Repository(t)
-            saved <- repository.getArtist(artistId)
-          } yield saved
-        )
-
-        Then("Value is the expected")
-        r.asserting(_.isLeft mustBe true)
-      }
-
+    }
   }
 }
 

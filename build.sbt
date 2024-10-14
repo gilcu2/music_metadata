@@ -7,7 +7,7 @@ val PureConfigVersion = "0.17.7"
 val CirceVersion = "0.14.10"
 val DoobieVersion = "1.0.0-RC3"
 val H2Version = "2.3.232"
-val FlywayVersion = "10.18.2"
+val FlywayVersion = "10.19.0"
 val ScalaTestVersion = "3.2.19"
 
 
@@ -25,10 +25,12 @@ lazy val root = (project in file("."))
       "io.circe" %% "circe-parser" % CirceVersion,
       "io.circe" %% "circe-literal" % CirceVersion,
       "org.tpolecat" %% "doobie-h2" % DoobieVersion,
+      "org.tpolecat" %% "doobie-postgres" % DoobieVersion,
       "org.tpolecat" %% "doobie-hikari" % DoobieVersion,
       "de.lhns" %% "doobie-flyway" % "0.4.0",
       "com.h2database" % "h2" % H2Version,
       "org.flywaydb" % "flyway-core" % FlywayVersion,
+      "org.flywaydb" % "flyway-database-postgresql" % FlywayVersion,
 
       "org.scalatest" %% "scalatest" % ScalaTestVersion % Test,
       "org.typelevel" %% "cats-effect-testing-scalatest" % "1.5.0" % Test,

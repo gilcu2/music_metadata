@@ -1,3 +1,4 @@
+import Configs.Config
 import cats.effect._
 import Util._
 import doobie.hikari.HikariTransactor
@@ -6,6 +7,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import cats.effect.testing.scalatest.AsyncIOSpec
 import Models._
+import com.typesafe.config.ConfigFactory
 
 class RepositoryCustomerUpdateSpec
   extends funspec.AsyncFunSpec
@@ -13,7 +15,11 @@ class RepositoryCustomerUpdateSpec
   with GivenWhenThen
   with Matchers {
 
-  val transactor: Resource[IO, HikariTransactor[IO]] = DB.transactor()
+  val configFile = "test.conf"
+  val transactor: Resource[IO, HikariTransactor[IO]] = for {
+    config <- Config.load(configFile)
+    transactor <- DB.transactor(config)
+  } yield transactor
   val artistTable="artist"
   val customerTable="customer"
 

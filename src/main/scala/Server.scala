@@ -46,7 +46,7 @@ object Server {
   private def resources(configFile: String): Resource[IO, Resources] = {
     for {
       config <- Config.load(configFile)
-      transactor <- DB.transactor()
+      transactor <- DB.transactor(config)
     } yield Resources(transactor, config)
   }
 

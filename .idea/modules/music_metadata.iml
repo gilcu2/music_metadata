@@ -39,7 +39,9 @@
     <orderEntry type="library" name="sbt: io.circe:circe-literal_2.13:0.14.10:jar" level="project" />
     <orderEntry type="library" name="sbt: io.circe:circe-numbers_2.13:0.14.10:jar" level="project" />
     <orderEntry type="library" name="sbt: io.circe:circe-parser_2.13:0.14.10:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.flywaydb:flyway-core:10.18.2:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.checkerframework:checker-qual:3.31.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.flywaydb:flyway-core:10.19.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.flywaydb:flyway-database-postgresql:10.19.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.http4s:blaze-core_2.13:0.23.16:jar" level="project" />
     <orderEntry type="library" name="sbt: org.http4s:blaze-http_2.13:0.23.16:jar" level="project" />
     <orderEntry type="library" name="sbt: org.http4s:http4s-blaze-client_2.13:0.23.16:jar" level="project" />
@@ -53,7 +55,8 @@
     <orderEntry type="library" name="sbt: org.http4s:http4s-jawn_2.13:0.23.16:jar" level="project" />
     <orderEntry type="library" name="sbt: org.http4s:http4s-server_2.13:0.23.24:jar" level="project" />
     <orderEntry type="library" name="sbt: org.log4s:log4s_2.13:1.10.0:jar" level="project" />
-    <orderEntry type="library" scope="TEST" name="sbt: org.scala-lang.modules:scala-xml_2.13:2.1.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.postgresql:postgresql:42.6.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scala-lang.modules:scala-xml_2.13:2.3.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.scala-lang:scala-library:2.13.15:jar" level="project" />
     <orderEntry type="library" name="sbt: org.scala-lang:scala-reflect:2.13.15:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: org.scalactic:scalactic_2.13:3.2.19:jar" level="project" />
@@ -73,11 +76,16 @@
     <orderEntry type="library" scope="TEST" name="sbt: org.scalatest:scalatest-wordspec_2.13:3.2.19:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: org.scalatest:scalatest_2.13:3.2.19:jar" level="project" />
     <orderEntry type="library" name="sbt: org.scodec:scodec-bits_2.13:1.1.38:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scoverage:scalac-scoverage-domain_2.13:2.2.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scoverage:scalac-scoverage-reporter_2.13:2.2.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scoverage:scalac-scoverage-runtime_2.13:2.2.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scoverage:scalac-scoverage-serializer_2.13:2.2.1:jar" level="project" />
     <orderEntry type="library" name="sbt: org.slf4j:slf4j-api:2.0.7:jar" level="project" />
     <orderEntry type="library" name="sbt: org.tpolecat:doobie-core_2.13:1.0.0-RC3:jar" level="project" />
     <orderEntry type="library" name="sbt: org.tpolecat:doobie-free_2.13:1.0.0-RC3:jar" level="project" />
     <orderEntry type="library" name="sbt: org.tpolecat:doobie-h2_2.13:1.0.0-RC3:jar" level="project" />
     <orderEntry type="library" name="sbt: org.tpolecat:doobie-hikari_2.13:1.0.0-RC3:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.tpolecat:doobie-postgres_2.13:1.0.0-RC3:jar" level="project" />
     <orderEntry type="library" name="sbt: org.tpolecat:typename_2.13:1.1.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.typelevel:case-insensitive_2.13:1.4.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.typelevel:cats-core_2.13:2.12.0:jar" level="project" />

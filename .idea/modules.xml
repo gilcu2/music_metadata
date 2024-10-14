@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/music_metadata.iml" filepath="$PROJECT_DIR$/.idea/modules/music_metadata.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/music_metadata.integration.iml" filepath="$PROJECT_DIR$/.idea/modules/music_metadata.integration.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/music_metadata.music_metadata-build.iml" filepath="$PROJECT_DIR$/.idea/modules/music_metadata.music_metadata-build.iml" />
     </modules>
   </component>
