@@ -22,6 +22,7 @@ object Server {
     for {
       _ <- DB.initialize(resources.transactor)
       repository = new Repository(resources.transactor)
+      _ <- IO.println(s"Listening on ${resources.config.server.host}:${resources.config.server.port}")
       exitCode <- BlazeServerBuilder[IO]
         .bindHttp(resources.config.server.port, resources.config.server.host)
         .withHttpApp(withErrorLogging(repository))

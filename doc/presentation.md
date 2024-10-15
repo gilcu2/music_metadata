@@ -90,11 +90,13 @@ Several direction for further improvements:
   - Which artist and how many times the customer have listened in some time interval
   - Which tracks and how many times all customers have listened in some time interval
   - Which artist and how many times all customers have listened in some time interval
+- OpenAPI description (tapir) 
 
 ---
 
 ## Improve development
 
+- Refine types for data validation
 - Linting: scalafix, sonarqube
 - Testing: Integration tests again a production DB, scalability test
 - Set minimum test code coverage and improve coverage

@@ -1,11 +1,9 @@
-import Models.{Artist, ArtistAlias, Customer, Genre, Track}
+import Models._
 import cats.effect.IO
 import doobie.implicits._
 import doobie.util.fragment.Fragment
-import doobie.util.query.Query
 import doobie.util.transactor.Transactor
 import fs2.Stream
-import shapeless.HNil
 
 class Repository(transactor: Transactor[IO]) {
 
@@ -216,53 +214,5 @@ class Repository(transactor: Transactor[IO]) {
     val sql = sql"delete from " ++ Fragment.const(tableName)
     sql.update.run.transact(transactor)
   }
-
-
-
-  //  def getAllStats(airport_name_begin: String = ""): Stream[IO, AirportReviewCount] = {
-//    sql"""
-//         SELECT airport_name, count(*) as review_count
-//         FROM review
-//         WHERE airport_name LIKE ${airport_name_begin + "%"}
-//         GROUP BY airport_name
-//      """
-//      .query[AirportReviewCount].stream.transact(transactor)
-//  }
-//
-//  def getAirportStats(airport_name: String)
-//  : IO[Either[AirportNotFoundError.type, AirportStats]] = {
-//    sql"""
-//         SELECT
-//            airport_name,
-//            count(*) as review_count,
-//            AVG(overall_rating) as average_overall_rating,
-//            SUM(recommended)
-//         FROM review
-//         WHERE airport_name = $airport_name
-//      """
-//      .query[AirportStats].option.transact(transactor).map {
-//        case Some(stat) => Right(stat)
-//        case None => Left(AirportNotFoundError)
-//      }
-//  }
-//
-//  def getAirportReviews(airport_name: String, maybe_minimum_overall_rating: Option[Double] = None): Stream[IO, AirportReview] = {
-//    val minimum_overall_rating = maybe_minimum_overall_rating.getOrElse(0.0)
-//    sql"""
-//         SELECT
-//            airport_name,
-//            overall_rating,
-//            date,
-//            content,
-//            author,
-//            author_country
-//         FROM review
-//         WHERE airport_name = $airport_name AND overall_rating >= $minimum_overall_rating
-//      """
-//      .query[AirportReview].stream.transact(transactor)
-//  }
-
-
-}
 
 case class RepositoryError(s:String)
